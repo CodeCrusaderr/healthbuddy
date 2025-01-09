@@ -77,6 +77,6 @@ HealthBuddy is open-source and available under the [MIT License](LICENSE).
 
 For any inquiries, feel free to reach out:
 
-- Email: [your-email@example.com](mailto:pranavvaghela2101@gmail.com)
+- Email: pranavvaghela2101@gmail.com(mailto:pranavvaghela2101@gmail.com)
 - GitHub: [https://github.com/pranavvwhoo]
 ```
