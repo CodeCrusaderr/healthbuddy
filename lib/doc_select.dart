@@ -403,9 +403,9 @@ class _AppointmentReceiptPageState extends State<AppointmentReceiptPage> {
   void initState() {
     super.initState();
     twilioFlutter = TwilioFlutter(
-      accountSid: "AC95efc63bc754f1a7b08eb0b396cf1530",
-      authToken: "fed3ef2442085ed327c0945a738ab522",
-      twilioNumber: "+17012034268",
+      accountSid: "",
+      authToken: "",
+      twilioNumber: "",
     );
   }
 
