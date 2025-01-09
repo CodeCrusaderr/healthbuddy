@@ -1,0 +1,30 @@
+              // return WillPopScope(
+      //   onWillPop: () async {
+
+      //     return await showDialog(
+      //           context: context,
+      //           builder: (context) => AlertDialog(
+      //             title: Text(
+      //               'Confirm Logout',
+      //               style: TextStyle(color: Color.fromRGBO(10, 78, 159, 1)),
+      //             ),
+      //             content: Text('Are you sure you want to logout?'),
+      //             actions: [
+      //               TextButton(
+      //                 onPressed: () => Navigator.of(context).pop(true),
+      //                 child: Text('Yes',
+      //                     style:
+      //                         TextStyle(color: Color.fromRGBO(10, 78, 159, 1))),
+      //               ),
+      //               TextButton(
+      //                 onPressed: () => Navigator.of(context).pop(false),
+      //                 child: Text(
+      //                   'No',
+      //                   style: TextStyle(color: Color.fromRGBO(10, 78, 159, 1)),
+      //                 ),
+      //               ),
+      //             ],
+      //           ),
+      //         ) ??
+      //         false;
+      //   },

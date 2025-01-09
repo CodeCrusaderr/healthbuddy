@@ -1,0 +1,398 @@
+class DoctorListItem extends StatefulWidget {
+  final String name;
+  final int rating;
+
+  DoctorListItem({required this.name, required this.rating});
+
+  @override
+  _DoctorListItemState createState() => _DoctorListItemState();
+}
+
+class _DoctorListItemState extends State<DoctorListItem> {
+  bool isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Card(
+        elevation: 4.0,
+        child: Column(
+          children: [
+            ListTile(
+              onTap: () {
+                setState(
+                  () {
+                    isExpanded = !isExpanded;
+                  },
+                );
+              },
+              leading: CircleAvatar(
+                child: Text(
+                  widget.name[0], // Display first letter of doctor's name
+                  style: TextStyle(color: Colors.white),
+                ),
+                backgroundColor: Color.fromRGBO(10, 78, 159, 1),
+              ),
+              title: Text(
+                widget.name,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Row(
+                children: List.generate(
+                  widget.rating,
+                  (index) => Icon(Icons.star, color: Colors.amber, size: 16),
+                ),
+              ),
+            ),
+            if (isExpanded) ...[
+              SizedBox(height: 8.0),
+              TimeSlotSelection(doctorName: widget.name),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class TimeSlotSelection extends StatelessWidget {
+  final String doctorName;
+
+  TimeSlotSelection({required this.doctorName});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Wrap(
+        spacing: 8.0,
+        runSpacing: 8.0,
+        children: List.generate(
+          5,
+          (index) {
+            final hour = index + 10;
+            return TimeSlotButton(
+              doctorName: doctorName,
+              time: '$hour:00',
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class TimeSlotButton extends StatefulWidget {
+  final String time;
+  final String doctorName;
+
+  TimeSlotButton({required this.time, required this.doctorName});
+
+  @override
+  _TimeSlotButtonState createState() => _TimeSlotButtonState();
+}
+
+class _TimeSlotButtonState extends State<TimeSlotButton> {
+  bool isSelected = false;
+  bool isBooked = false; // Add this line
+
+  @override
+  void initState() {
+    super.initState();
+    checkIfSlotIsBooked();
+  }
+
+  void checkIfSlotIsBooked() async {
+    // Get a reference to the Firestore instance
+    final firestoreInstance = FirebaseFirestore.instance;
+
+    // Get the document for the specific doctor from the 'appointments' collection
+    final doctorDocument = await firestoreInstance
+        .collection('appointments')
+        .doc(widget.doctorName)
+        .get();
+
+    // Get the 'timeSlots' field from the document, which is a list of time slots
+    final timeSlots = doctorDocument.data()?['timeSlots'] as List;
+
+    // Find the time slot that matches the time of this widget
+    final slot = timeSlots.firstWhere((slot) => slot['time'] == widget.time,
+        orElse: () => null);
+
+    // If the slot is found and it's booked (isBooked == true), set isBooked to true
+    if (slot != null && slot['isBooked'] == true) {
+      setState(() {
+        isBooked = true;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: isBooked
+          ? null
+          : () async {
+              // Disable the button if the slot is booked
+              setState(
+                () {
+                  isSelected = !isSelected;
+                },
+              );
+              if (isSelected) {
+                _showConfirmationPopup(context);
+
+                // Get a reference to the Firestore instance
+                final firestoreInstance = FirebaseFirestore.instance;
+
+                // Get a reference to the doctor's document
+                final doctorDocument = firestoreInstance
+                    .collection('appointments')
+                    .doc(widget.doctorName);
+
+                // Update the time slot
+                await doctorDocument.set({
+                  'timeSlots': FieldValue.arrayUnion([
+                    {
+                      'time': widget.time,
+                      'isBooked': true,
+                      'username':
+                          FirebaseAuth.instance.currentUser!.displayName,
+                    }
+                  ])
+                }, SetOptions(merge: true));
+                setState(() {
+                  isBooked = true;
+                }); // Use SetOptions(merge: true) to merge new data with existing data
+              }
+
+              if (isBooked) {
+                final firestore = FirebaseFirestore.instance;
+                final userAppointments = firestore
+                    .collection('userAppointments')
+                    .doc(FirebaseAuth.instance.currentUser!.uid);
+
+                await userAppointments.set({
+                  'appointments': FieldValue.arrayUnion([
+                    {
+                      'time': widget.time,
+                      'isBooked': true,
+                      'DoctorName': widget.doctorName,
+                    }
+                  ])
+                }, SetOptions(merge: true));
+              }
+            },
+      style: ElevatedButton.styleFrom(
+        padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+        backgroundColor: isBooked
+            ? Colors.red
+            : (isSelected
+                ? Colors.blue
+                : Colors.grey), // Change the color if the slot is booked
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+      ),
+      child: Text(
+        widget.time,
+        style: TextStyle(color: Colors.white, fontSize: 16.0),
+      ),
+    );
+  }
+
+  void _showConfirmationPopup(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+          child: Container(
+            width: 300.0,
+            padding: EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  child: Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                    size: 60,
+                  ),
+                ),
+                SizedBox(height: 16.0),
+                Text(
+                  'Confirmed!',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromRGBO(10, 78, 159, 1),
+                  ),
+                ),
+                SizedBox(height: 16.0),
+                Text(
+                  'Your appointment with ${widget.doctorName} has been confirmed at ${widget.time}.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16),
+                ),
+                SizedBox(height: 16.0),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => AppointmentReceiptPage(
+                              doctorName: widget.doctorName)),
+                    );
+                  },
+                  child: Text(
+                    'Proceed to Pay',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color.fromRGBO(10, 78, 159, 1),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class AppointmentReceiptPage extends StatelessWidget {
+  final String doctorName;
+
+  AppointmentReceiptPage({required this.doctorName}) : super(key: null);
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Appointment Receipt Page',
+            style: TextStyle(color: Colors.white)),
+        backgroundColor: Color.fromRGBO(10, 78, 159, 1),
+        iconTheme: IconThemeData(color: Colors.white),
+      ),
+      body: Container(
+        color: Colors.white,
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildReceiptHeader(),
+            SizedBox(height: 24.0),
+            _buildAppointmentDetails(),
+            SizedBox(height: 24.0),
+            _buildPaymentOptions(context),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReceiptHeader() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Appointment Receipt',
+          style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAppointmentDetails() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildDetailItem('Doctor Name', '$doctorName'),
+        _buildDetailItem('Doctor Type', 'General Physician'),
+        _buildDetailItem('Time Slot Selected', '10:00 AM - 11:00 AM'),
+        _buildDetailItem('Location', 'HealthBuddy Labs '),
+        SizedBox(height: 16.0),
+        Text(
+          'Amount: Rs. 100',
+          style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDetailItem(String title, String value) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: TextStyle(fontSize: 16.0),
+          ),
+          Text(
+            value,
+            style: TextStyle(fontSize: 16.0),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaymentOptions(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ElevatedButton(
+          onPressed: () {
+            // Implement payment logic for Google Pay
+            _startTransaction();
+          },
+          child: Text('Pay with Google Pay',
+              style: TextStyle(color: Colors.white)),
+          style: ElevatedButton.styleFrom(
+            padding: EdgeInsets.symmetric(vertical: 16.0),
+            textStyle: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+            backgroundColor: Color.fromRGBO(10, 78, 159, 1),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _startTransaction() {
+    UpiIndia _upiIndia = UpiIndia();
+    _upiIndia
+        .startTransaction(
+      app: UpiApp.googlePay,
+      receiverUpiId: "varshavaghela001@okicici",
+      receiverName: 'Varsha Vaghela',
+      transactionRefId: 'TestingUpiIndiaPlugin',
+      transactionNote: 'Not actual. Just an example.',
+      amount: 100.00,
+    )
+        .then((value) {
+      print('Transaction response: $value');
+      if (value.status == UpiPaymentStatus.SUCCESS) {
+        // Payment success, navigate to success page or do further processing
+        print('Payment successful!');
+      } else {
+        // Payment failed or user canceled, handle accordingly
+        print('Payment failed or canceled!');
+      }
+    }).catchError((error) {
+      print('Error initiating transaction: $error');
+    });
+  }
+}

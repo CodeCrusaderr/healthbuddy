@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "861625362829",
+    "project_id": "health-buddy-dba97",
+    "storage_bucket": "health-buddy-dba97.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:861625362829:android:c85f3bcc7ea2ed680135c4",
+        "android_client_info": {
+          "package_name": "com.example.dashboard"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "861625362829-e2pnfltf46su3uajp73ak52bp03cdg00.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.dashboard",
+            "certificate_hash": "27119d63f754389308e6043dba01846264e2d103"
+          }
+        },
+        {
+          "client_id": "861625362829-dk4pbftr0smcddk1rc4dl8dh9jmth2mh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmfcA9LV375cHWo6z6YJ9qa_PJmuqprus"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "861625362829-dk4pbftr0smcddk1rc4dl8dh9jmth2mh.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "861625362829-324k9ojmsnaak778hijpou65b6pcsqgc.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.dashboard.RunnerTests"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
