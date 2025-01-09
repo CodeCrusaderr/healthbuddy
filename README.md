@@ -24,7 +24,7 @@ HealthBuddy is a comprehensive healthcare application designed to simplify healt
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/HealthBuddy.git
+   git clone https://github.com/CodeCrusaderr/HealthBuddy.git
    ```
 
 2. Navigate into the project directory:
